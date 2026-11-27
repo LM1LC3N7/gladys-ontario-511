@@ -67,3 +67,7 @@ Key"}`, XML without a JSON Accept) was seen live from the VM without a key.
   whole province is an outage, not 0; a start present but unreadable makes the event unreadable; another language
   reads at once; the exact OGL-Ontario statement in the docs, the README and the configuration intro; store name
   "Ontario 511 (unofficial)"; the reviewer's 29 mutants added to `scripts/mutants.json`.
+
+## Next patch
+
+- Review minors: see `_lots/lot25/reviews/ontario-511-r2.md` (5 gardes sans test, StartDate 0 ou décimal, 200 illisible sans pause, étranglement non documenté).
