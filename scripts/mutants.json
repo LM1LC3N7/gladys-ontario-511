@@ -1,0 +1,308 @@
+[
+  {
+    "name": "key refusal: only the Invalid Key message",
+    "file": "src/ontario511.js",
+    "from": "return message !== null && /^\\s*invalid key\\s*\\.?\\s*$/i.test(message);",
+    "to": "return true;"
+  },
+  {
+    "name": "key refusal: only on a 400",
+    "file": "src/ontario511.js",
+    "from": "if (response.status === 400 && (await isKeyRefusal(response))) {",
+    "to": "if (await isKeyRefusal(response)) {"
+  },
+  {
+    "name": "json content type",
+    "file": "src/ontario511.js",
+    "from": "if (!/\\bjson\\b/i.test(type))",
+    "to": "if (false)"
+  },
+  {
+    "name": "body cut",
+    "file": "src/ontario511.js",
+    "from": "if (size > max) {",
+    "to": "if (false) {"
+  },
+  {
+    "name": "mostly unreadable refused",
+    "file": "src/ontario511.js",
+    "from": "skipped * 2 > json.length",
+    "to": "false"
+  },
+  {
+    "name": "too many items",
+    "file": "src/ontario511.js",
+    "from": "if (json.length > MAX_ITEMS) return { tooMany: true };",
+    "to": ""
+  },
+  {
+    "name": "planned start not in effect",
+    "file": "src/ontario511.js",
+    "from": "return event.start === null || event.start <= at;",
+    "to": "return true;"
+  },
+  {
+    "name": "current report within 24 h",
+    "file": "src/ontario511.js",
+    "from": "at - segment.updated <= CONDITION_FRESH",
+    "to": "true"
+  },
+  {
+    "name": "future report not current",
+    "file": "src/ontario511.js",
+    "from": "segment.updated <= at + 5 * MINUTE &&",
+    "to": ""
+  },
+  {
+    "name": "winter words win over bare",
+    "file": "src/ontario511.js",
+    "from": "if (conditions.some((text) => WINTER.test(text))) return 'winter';",
+    "to": ""
+  },
+  {
+    "name": "bare only when every word is bare",
+    "file": "src/ontario511.js",
+    "from": "if (conditions.every((text) => BARE.test(text))) return 'bare';",
+    "to": "if (conditions.some((text) => BARE.test(text))) return 'bare';"
+  },
+  {
+    "name": "drifting is winter",
+    "file": "src/ontario511.js",
+    "from": "if (/^(yes|oui|true)$/i.test(drifting)) return 'winter';",
+    "to": ""
+  },
+  {
+    "name": "only an explicit true is a full closure",
+    "file": "src/ontario511.js",
+    "from": "fullClosure: raw.IsFullClosure === true,",
+    "to": "fullClosure: Boolean(raw.IsFullClosure),"
+  },
+  {
+    "name": "unix range",
+    "file": "src/ontario511.js",
+    "from": "if (value < UNIX_MIN || value > UNIX_MAX) return null;",
+    "to": ""
+  },
+  {
+    "name": "id fallback needs both",
+    "file": "src/ontario511.js",
+    "from": "if (org && source) return `${org}:${source}`;",
+    "to": "if (org || source) return `${org}:${source}`;"
+  },
+  {
+    "name": "0,0 is no place",
+    "file": "src/geo.js",
+    "from": "if (lat === 0 && lon === 0) return null;",
+    "to": ""
+  },
+  {
+    "name": "polyline alphabet",
+    "file": "src/geo.js",
+    "from": "if (byte < 0 || byte > 63) return null;",
+    "to": ""
+  },
+  {
+    "name": "polyline cut short",
+    "file": "src/geo.js",
+    "from": "if (index >= text.length) return null;",
+    "to": "if (index >= text.length) return 0;"
+  },
+  {
+    "name": "polyline bounded",
+    "file": "src/geo.js",
+    "from": "while (index < text.length && points.length < MAX_POINTS) {",
+    "to": "while (index < text.length) {"
+  },
+  {
+    "name": "unknown winter count is null",
+    "file": "src/zone.js",
+    "from": "if (known.length === 0) return null;",
+    "to": "if (known.length === 0) return 0;"
+  },
+  {
+    "name": "stale reports never counted",
+    "file": "src/zone.js",
+    "from": "const known = matches.filter((m) => m.current && m.segment.state !== 'unknown');",
+    "to": "const known = matches.filter((m) => m.segment.state !== 'unknown');"
+  },
+  {
+    "name": "road filter",
+    "file": "src/zone.js",
+    "from": "const onRoads = (wanted, road) => wanted.size === 0 || wanted.has(roadKey(road));",
+    "to": "const onRoads = () => true;"
+  },
+  {
+    "name": "closure counted",
+    "file": "src/ontario511.js",
+    "from": "export const isClosure = (event) => event.type === 'closures' || event.fullClosure;",
+    "to": "export const isClosure = (event) => event.type === 'closures';"
+  },
+  {
+    "name": "key shape",
+    "file": "src/config.js",
+    "from": "!/^[\\x21-\\x7e]+$/.test(key)",
+    "to": "false"
+  },
+  {
+    "name": "zone envelope",
+    "file": "src/config.js",
+    "from": "if (!inside) errors.push({ slot, field: keys.latitude, code: 'outside_on' });",
+    "to": ""
+  },
+  {
+    "name": "request gap 7 s",
+    "file": "src/constants.js",
+    "from": "export const REQUEST_GAP = 7 * SECOND;",
+    "to": "export const REQUEST_GAP = 5 * SECOND;"
+  },
+  {
+    "name": "no key: no read",
+    "file": "src/app.js",
+    "from": "    if (config.key === null) {\n      const errors",
+    "to": "    if (false) {\n      const errors"
+  },
+  {
+    "name": "refused key in memory",
+    "file": "src/app.js",
+    "from": "if (this.refusedFull !== null) this.refused = this.refusedFull === print;",
+    "to": "if (this.refusedFull !== null) this.refused = false;"
+  },
+  {
+    "name": "refused key from /data",
+    "file": "src/app.js",
+    "from": "else this.refused = this.persisted.refusedKey === print.slice(0, 2);",
+    "to": "else this.refused = false;"
+  },
+  {
+    "name": "refused key kept in /data",
+    "file": "src/app.js",
+    "from": "this.persisted.refusedKey = print.slice(0, 2);",
+    "to": ""
+  },
+  {
+    "name": "refused key truncated",
+    "file": "src/app.js",
+    "from": "this.persisted.refusedKey = print.slice(0, 2);",
+    "to": "this.persisted.refusedKey = print;"
+  },
+  {
+    "name": "refused: no cycle",
+    "file": "src/app.js",
+    "from": "if (gen !== this.gen || this.refused) return;",
+    "to": "if (gen !== this.gen) return;"
+  },
+  {
+    "name": "refused: no timer left",
+    "file": "src/app.js",
+    "from": "    this.nextDueMono = null;\n    if (this.cycleTimer) this.timers.clearTimeout(this.cycleTimer);\n    this.cycleTimer = null;\n    await this.persist();",
+    "to": "    this.nextDueMono = null;\n    await this.persist();"
+  },
+  {
+    "name": "refusal lifted by a success",
+    "file": "src/app.js",
+    "from": "if (events.ok) this.onKeyAccepted();",
+    "to": ""
+  },
+  {
+    "name": "test button: one try at a time",
+    "file": "src/app.js",
+    "from": "if (this.running) return M.keyRetryBusy;",
+    "to": ""
+  },
+  {
+    "name": "test button: never during a pause",
+    "file": "src/app.js",
+    "from": "config.zones.length > 0 && this.pausedFor() === 0",
+    "to": "config.zones.length > 0"
+  },
+  {
+    "name": "conditions refused alone: spaced",
+    "file": "src/app.js",
+    "from": "} else if (result.kind === 'http' || result.kind === 'key') {",
+    "to": "} else if (false) {"
+  },
+  {
+    "name": "conditions refused alone: never a pause",
+    "file": "src/app.js",
+    "from": "const PAUSING_SECONDARY = ['rate', 'server'];",
+    "to": "const PAUSING_SECONDARY = ['rate', 'server', 'http', 'key'];"
+  },
+  {
+    "name": "skipped conditions",
+    "file": "src/app.js",
+    "from": "if (this.secondary.untilMono !== null && this.secondary.untilMono > mono) {",
+    "to": "if (false) {"
+  },
+  {
+    "name": "pause on a 429",
+    "file": "src/app.js",
+    "from": "const PAUSING = ['rate', 'server', 'http'];",
+    "to": "const PAUSING = ['server', 'http'];"
+  },
+  {
+    "name": "pause bounded to 6 h",
+    "file": "src/app.js",
+    "from": "duration = Math.min(PAUSE_MAX, Math.max(PAUSE_MIN, duration));",
+    "to": "duration = Math.max(PAUSE_MIN, duration);"
+  },
+  {
+    "name": "timers clamped",
+    "file": "src/app.js",
+    "from": "Number.isFinite(ms) ? Math.min(TIMER_MAX, Math.max(0, ms)) : fallback;",
+    "to": "ms;"
+  },
+  {
+    "name": "a throwing round re-arms",
+    "file": "src/app.js",
+    "from": "          this.scheduleCycle(interval, gen);\n        });",
+    "to": "        });"
+  },
+  {
+    "name": "restart waits the interval",
+    "file": "src/app.js",
+    "from": "wait = Math.max(0, last + interval - wall);",
+    "to": "wait = 0;"
+  },
+  {
+    "name": "unreadable data waits",
+    "file": "src/app.js",
+    "from": "wait = Math.max(0, this.startMono + REFRESH_MIN * MINUTE - mono);",
+    "to": "wait = 0;"
+  },
+  {
+    "name": "no believable time: nothing counted",
+    "file": "src/app.js",
+    "from": "if (at === null) layers[key] = { ok: false, kind: 'no_time' };",
+    "to": "if (false) layers[key] = { ok: false, kind: 'no_time' };"
+  },
+  {
+    "name": "unknown winter never published",
+    "file": "src/app.js",
+    "from": "    if (winter !== null) {\n      states.push",
+    "to": "    if (conditions) {\n      states.push"
+  },
+  {
+    "name": "first read only learns",
+    "file": "src/app.js",
+    "from": "const baseline = !previous || previous.fingerprint !== fingerprint;",
+    "to": "const baseline = false;"
+  },
+  {
+    "name": "fresh events only",
+    "file": "src/app.js",
+    "from": "if (latest !== null && at - latest <= FRESH_EVENT) fresh.push(match);",
+    "to": "fresh.push(match);"
+  },
+  {
+    "name": "stop cuts the request",
+    "file": "src/app.js",
+    "from": "    this.abortInflight?.abort();\n    await this.persist();",
+    "to": "    await this.persist();"
+  },
+  {
+    "name": "secondary failure keeps events",
+    "file": "src/app.js",
+    "from": "    if (counts) {\n      states.push(",
+    "to": "    if (counts && conditions) {\n      states.push("
+  }
+]

@@ -1,0 +1,46 @@
+{
+  "source": "Built from the samples of https://511on.ca/help/endpoint/roadconditions (2026-11-27): field names, types and values as documented (EncodedPolyline a string or a list); the Kenora sample keeps its 2020 LastUpdated. Not a capture: no key.",
+  "date": "Fri, 27 Nov 2026 15:00:00 GMT",
+  "body": [
+    {
+      "LocationDescription": "From Hwy 427 to Hwy 404",
+      "Condition": ["Partly snow covered"],
+      "Visibility": "Fair",
+      "Drifting": null,
+      "Region": "Central",
+      "RoadwayName": "401",
+      "EncodedPolyline": "_dviG~zydNozDoh\\owH_pR",
+      "LastUpdated": 1795788000
+    },
+    {
+      "LocationDescription": "From Hwy 427 to Toronto city limits",
+      "Condition": ["Bare and wet road"],
+      "Visibility": "Good",
+      "Drifting": null,
+      "Region": "Central",
+      "RoadwayName": "QEW",
+      "EncodedPolyline": ["_pfiGnbpdNo}@otL"],
+      "LastUpdated": 1795784400
+    },
+    {
+      "LocationDescription": "From North Bay to Powassan",
+      "Condition": ["Snow packed", "Partly ice covered"],
+      "Visibility": "Poor",
+      "Drifting": "Yes",
+      "Region": "Northeastern",
+      "RoadwayName": "11",
+      "EncodedPolyline": "_~qyG~o~cN~}i@oqP",
+      "LastUpdated": 1795789800
+    },
+    {
+      "LocationDescription": "From Kenora to Ontario/Manitoba border",
+      "Condition": ["Bare and dry road"],
+      "Visibility": "Good",
+      "Drifting": null,
+      "Region": "Northwestern",
+      "RoadwayName": "17",
+      "EncodedPolyline": ["ouwnHnav_QozD~{_C"],
+      "LastUpdated": 1580824842
+    }
+  ]
+}
