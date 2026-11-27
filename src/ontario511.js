@@ -245,6 +245,10 @@ export function readEvent(raw) {
     polylines: polylinesOf(raw.EncodedPolyline),
   });
   if (!lines) return null;
+  // A start that is there but cannot be read (milliseconds, a text...) is a
+  // format change: the event is not read, never counted as in effect at once.
+  const start = readUnix(raw.StartDate);
+  if (start === null && raw.StartDate !== null && raw.StartDate !== undefined) return null;
   return {
     id,
     type: EVENT_TYPES.includes(raw.EventType) ? raw.EventType : 'other',
@@ -260,7 +264,7 @@ export function readEvent(raw) {
     fullClosure: raw.IsFullClosure === true,
     reported: readUnix(raw.Reported),
     updated: readUnix(raw.LastUpdated),
-    start: readUnix(raw.StartDate),
+    start,
     plannedEnd: readUnix(raw.PlannedEndDate),
     lines,
   };

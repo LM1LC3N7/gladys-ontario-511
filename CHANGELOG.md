@@ -24,4 +24,5 @@ the notes of the version's GitHub Release.
   fingerprint; the key itself never reaches the logs, the status or `/data`.
 - Each resource published on its own: a failed one keeps its last values (never 0) and the status says why; an
   unknown winter count (no current report) is not published.
+- The statement of the Open Government Licence – Ontario in the documentation and the configuration screen.
 - Store: `countries: ["CA"]` (the integration serves Ontario only), so `gladys_version` is `>=5.3.0`.

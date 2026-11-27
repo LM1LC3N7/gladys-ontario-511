@@ -217,6 +217,10 @@ const FAILURES = {
     en: 'no believable time to judge what is in effect (server Date missing or more than a day from the Gladys clock), not counted',
     fr: "pas d'heure fiable pour juger ce qui est en cours (en-tête Date absent ou à plus d'un jour de l'horloge de Gladys), non compté",
   },
+  empty: {
+    en: 'Ontario 511 sends an empty list of events for the whole province (most likely an outage of the source), nothing published',
+    fr: "Ontario 511 envoie une liste d'événements vide pour toute la province (sans doute une panne de la source), rien publié",
+  },
   skipped: {
     en: 'not asked this round (refused alone before, asked again later)',
     fr: 'non demandé à ce tour (refusé seul avant, redemandé plus tard)',

@@ -1,5 +1,9 @@
 # Ontario 511 (événements routiers et état des routes en hiver)
 
+> Contient de l'information utilisée sous la Licence du gouvernement ouvert – Ontario.
+> Licence : [Licence du gouvernement ouvert – Ontario](https://www.ontario.ca/fr/page/licence-du-gouvernement-ouvert-ontario).
+> Source : [Ontario 511](https://511on.ca/), ministère des Transports de l'Ontario.
+
 Intégration non officielle. Elle lit l'API pour développeurs **Ontario 511** du ministère des Transports de l'Ontario
 (MTO) : les **événements** (incidents, travaux, fermetures) et l'**état des routes en hiver** du réseau provincial.
 Elle demande une **clé de développeur** Ontario 511 gratuite.
@@ -24,7 +28,8 @@ Merci de signaler toute surprise sur le forum.
 
 1. Créez un compte sur [511on.ca](https://511on.ca/) et ouvrez l'espace développeurs
    ([511on.ca/developers/doc](https://511on.ca/developers/doc)).
-2. Demandez une clé. Le ministère demande un nom d'organisation et un contact, l'usage prévu (ici : « domotique, usage
+2. Demandez une clé. Le ministère examine chaque demande au cas par cas et peut la refuser (entente d'accès pour les
+   développeurs, [511on.ca/developers/resources](https://511on.ca/developers/resources)). Il demande un nom d'organisation et un contact, l'usage prévu (ici : « domotique, usage
    personnel dans Gladys Assistant, sans redistribution ») et les tiers qui reçoivent les données (aucun).
 3. Collez la clé dans le champ **Clé de développeur** de la configuration. Gladys la garde dans sa base, ne la
    réaffiche jamais, et l'intégration ne l'envoie qu'à 511on.ca, dans l'adresse comme l'API le demande. Elle n'est
@@ -54,7 +59,8 @@ tels qu'Ontario 511 les écrit.
 `Date` de sa réponse). Un événement dont le début est à venir (une fermeture prévue) n'est pas compté avant de
 commencer. Un événement encore listé après sa fin prévue est encore compté (la fin était un plan). Les événements
 récurrents (« All days: 23:59-05:00 ») comptent tant qu'Ontario 511 les liste : l'horaire est un texte, donné dans les
-variables de scène. Un événement dont le début est inconnu compte comme en cours. Sans en-tête `Date`, l'horloge de
+variables de scène. Un événement sans début compte comme en cours ; un début présent mais illisible (pas une heure Unix en
+secondes) rend l'événement illisible : il est laissé de côté, jamais compté d'emblée. Sans en-tête `Date`, l'horloge de
 Gladys sert, si elle est plausible. Un `Date` à plus d'un jour de l'horloge de Gladys (l'une des deux est fausse), ou
 pas de `Date` avec une horloge invraisemblable : rien n'est compté, et l'état le dit.
 
@@ -67,7 +73,8 @@ mis à jour dans les 24 heures avant l'heure du serveur. Quand aucun tronçon de
 « Aucun rapport récent sur l'état des routes en hiver dans la zone ».
 
 **Rien plutôt que 0** : une réponse qui n'est pas une liste (une page d'erreur), une liste dont plus de la moitié des
-éléments est illisible, ou une liste de plus de 10 000 éléments, n'est jamais publiée comme 0. Chacune des deux
+éléments est illisible, une liste de plus de 10 000 éléments, ou une liste d'événements vide pour toute la province (sans doute une
+panne de la source), n'est jamais publiée comme 0. Chacune des deux
 ressources est indépendante : quand l'une échoue, ses fonctions gardent leur dernière valeur, l'état dit pourquoi, et
 l'autre est publiée quand même. Le résumé dit « Événements non lus » ou « État des routes en hiver non lu » pour celle
 qui a échoué.
@@ -88,7 +95,8 @@ fiable (voir plus haut). Au plus 20 événements par zone et par lecture : les a
 ## Configuration
 
 1. **Clé de développeur** (obligatoire).
-2. **Langue** : anglais ou français.
+2. **Langue** : anglais ou français. La changer lit aussitôt (7 secondes après le dernier appel), pour que les
+   textes arrivent dans la nouvelle langue.
 3. **Intervalle de lecture** : 10 à 120 minutes (15 par défaut).
 4. **Zone 1** (obligatoire), zones 2 et 3 (facultatives, laissées vides pour les désactiver) : un nom, la latitude et
    la longitude du centre (degrés décimaux, en Ontario), le rayon en km (20 par défaut), et si vous le voulez les
@@ -119,8 +127,8 @@ ressembler à la clé refusée : l'état dit alors que la clé est refusée, et 
 Seul le refus documenté compte : HTTP 400 avec le message « Invalid Key ». Un 401, un 403, un autre 400, une page
 illisible ne sont jamais un refus de la clé : ils mettent les lectures en pause comme une erreur du serveur (plus
 bas). Quand seul l'état des routes est refusé alors que les événements sont lus avec la même clé, les événements
-continuent et l'état des routes est redemandé plus tard : à la lecture suivante, puis toutes les 30 minutes, puis
-toutes les heures au plus ; les lectures ne sont jamais mises en pause pour cela.
+continuent et l'état des routes est redemandé plus tard : espacé de l'intervalle doublé à chaque fois (à la lecture suivante,
+puis 2, 4… intervalles plus tard), toutes les heures au plus ; les lectures ne sont jamais mises en pause pour cela.
 
 ## Rythme et courtoisie envers Ontario 511
 

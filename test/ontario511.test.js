@@ -55,7 +55,12 @@ test('"Invalid Key" (JSON and XML, as 511on.ca answers) is a refusal of the key;
     ),
   });
   assert.equal(xml.kind, 'key');
-  for (const body of [{ Message: 'Bad request' }, { message: 'Invalid Key' }, 'Invalid Key']) {
+  for (const body of [
+    { Message: 'Bad request' },
+    { message: 'Invalid Key' },
+    'Invalid Key',
+    { Message: 'Invalid Key for this resource, see the documentation' },
+  ]) {
     const other = await getJson('u', { fetchImpl: answer(json(body, { status: 400 })) });
     assert.equal(other.kind, 'http', JSON.stringify(body));
   }
@@ -182,6 +187,10 @@ test('an event of the documented sample is read; id, place, closure, times', () 
   );
   assert.equal(readEvent(event(null, { SourceId: null })), null);
   assert.equal(readEvent(event(-4, { SourceId: null })), null);
+  // A start there but unreadable (milliseconds, a text): not read, never counted at once.
+  assert.equal(readEvent(event(1, { StartDate: CAPTURED_AT })), null);
+  assert.equal(readEvent(event(1, { StartDate: '1744084740' })), null);
+  assert.notEqual(readEvent(event(1, { StartDate: null })), null);
   // No place: not read. 0, 0 is not a place.
   assert.equal(readEvent(event(1, { Latitude: null, Longitude: null })), null);
   assert.equal(readEvent(event(1, { Latitude: 0, Longitude: 0 })), null);

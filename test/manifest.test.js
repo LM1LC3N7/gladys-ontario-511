@@ -233,6 +233,22 @@ test('the docs say what the data is not, the licence, the key and the quota', ()
     assert.match(text, /never tested with a real key/i, file);
     assert.match(text, /10 calls every 60 seconds|ten calls every 60 seconds/i, file);
   }
+  // The statement the Open Government Licence – Ontario asks for, word for word.
+  const statement = 'Contains information licensed under the Open Government Licence – Ontario.';
+  const statementFr =
+    "Contient de l'information utilisée sous la Licence du gouvernement ouvert – Ontario.";
+  for (const file of ['docs/en.md', 'README.md']) assert.ok(read(file).includes(statement), file);
+  assert.ok(read('docs/fr.md').includes(statementFr));
+  const intro = manifest.config_schema[0];
+  assert.ok(intro.description.en.includes(statement));
+  assert.ok(intro.description.fr.includes(statementFr));
+  assert.ok(
+    intro.links.some(
+      (l) => l.url === 'https://www.ontario.ca/page/open-government-licence-ontario',
+    ),
+  );
+  assert.ok(intro.links.some((l) => l.url === 'https://511on.ca/'));
+  assert.match(manifest.name, /\(unofficial\)/);
   const fr = read('docs/fr.md');
   assert.match(fr, /pas une source officielle/i);
   assert.match(fr, /Licence du gouvernement ouvert – Ontario/);

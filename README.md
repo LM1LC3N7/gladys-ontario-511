@@ -4,6 +4,10 @@ Unofficial [Gladys Assistant](https://gladysassistant.com) integration for **Ont
 closures and winter road conditions on the Ontario road network, read from the Ontario 511 developer API of the
 Ministry of Transportation of Ontario with a free developer key.
 
+> Contains information licensed under the Open Government Licence – Ontario.
+> Licence: [Open Government Licence – Ontario](https://www.ontario.ca/page/open-government-licence-ontario);
+> source: [Ontario 511](https://511on.ca/).
+
 > This integration is not an official source. Before you drive, check [Ontario 511](https://511on.ca/) itself.
 
 Source: Ontario 511, Ministry of Transportation of Ontario, data under the Open Government Licence – Ontario. Not

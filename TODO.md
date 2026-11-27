@@ -36,7 +36,10 @@ Key"}`, XML without a JSON Accept) was seen live from the VM without a key.
   status, scene trigger), with two province-wide resources in place of boxes (the API has no area filter).
 - **Quota "Ten calls every 60 seconds"**: two calls per round for every zone, 7 s between two starts (at most 9 in
   any minute, test button included); interval 10 to 120 minutes, 15 by default.
-- **Pauses**: 429 2 min doubled, 5xx and other statuses 5 min doubled, all bounded to 6 h, kept in /data.
+- **Pauses**: 429 2 min doubled, 5xx and other statuses 5 min doubled, all bounded to 6 h, kept in /data. The pause
+  starts in `request()` with the answer (review r1): a late answer of an older round holds the next request, and a
+  429/5xx of the winter conditions keeps its pause and its level after the events were read; the doubling starts over
+  only when both resources were read without a pause asked.
 - **Key refusal** = HTTP 400 whose message is exactly "Invalid Key" (JSON or XML), on the events only. It stops
   every read; /data keeps 8 bits of a salted fingerprint (never the key; a brute force over 8 bits finds many keys);
   the full fingerprint stays in memory, so a new key typed while running is always tried. The test button tries once
@@ -59,3 +62,8 @@ Key"}`, XML without a JSON Accept) was seen live from the VM without a key.
 - **Lessons of waves 1-2 applied**: no timer armed on an infinite or huge delay (every delay clamped, tested); an
   unknown value never published as 0; tests fail fast (`until` with a limit, `t.after` cleanups); a round that throws
   re-arms the next one at the interval.
+- **Review r1 (d16290c)**: a round of a newer configuration never waits for an older one still publishing or
+  saving (each request checks its generation, so the old one sends nothing more); an empty list of events for the
+  whole province is an outage, not 0; a start present but unreadable makes the event unreadable; another language
+  reads at once; the exact OGL-Ontario statement in the docs, the README and the configuration intro; store name
+  "Ontario 511 (unofficial)"; the reviewer's 29 mutants added to `scripts/mutants.json`.

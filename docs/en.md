@@ -1,5 +1,9 @@
 # Ontario 511 (road events and winter road conditions)
 
+> Contains information licensed under the Open Government Licence – Ontario.
+> Licence: [Open Government Licence – Ontario](https://www.ontario.ca/page/open-government-licence-ontario).
+> Source: [Ontario 511](https://511on.ca/), Ministry of Transportation of Ontario.
+
 Unofficial integration. It reads the **Ontario 511** developer API of the Ministry of Transportation of Ontario
 (MTO): **events** (incidents, roadwork, closures) and **winter road conditions** of the provincial network. It needs
 a free **developer key** of Ontario 511.
@@ -22,7 +26,8 @@ against a fake server built from the documented samples. Please report any surpr
 
 1. Create an account on [511on.ca](https://511on.ca/) and open the developer area
    ([511on.ca/developers/doc](https://511on.ca/developers/doc)).
-2. Ask for a key. The ministry asks for an organization name and contact, the intended use (here: "home automation,
+2. Ask for a key. The ministry reviews each request case by case and may refuse it (Developer's Access Agreement,
+   [511on.ca/developers/resources](https://511on.ca/developers/resources)). It asks for an organization name and contact, the intended use (here: "home automation,
    personal use in Gladys Assistant, no redistribution") and the third parties that receive the data (none).
 3. Paste the key in the **Developer key** field of the configuration. Gladys keeps it in its database, never shows it
    again, and the integration sends it only to 511on.ca, in the query string as the API asks. It is never written to
@@ -52,7 +57,8 @@ as Ontario 511 writes them.
 header of its answer). An event whose start is in the future (a planned closure) is not counted until it starts. An
 event still listed after its planned end is still counted (the end was a plan). Recurring events ("All days:
 23:59-05:00") count for as long as Ontario 511 lists them: the schedule is a text, shown in the scene variables. An
-event whose start is unknown counts as in effect. Without a `Date` header, the clock of Gladys is used, when it is
+event without a start counts as in effect; a start that is there but cannot be read (not a Unix time in seconds)
+makes the event unreadable: it is left out, never counted at once. Without a `Date` header, the clock of Gladys is used, when it is
 plausible. A `Date` more than a day away from the clock of Gladys (one of the two is wrong), or no `Date` with an
 implausible clock: nothing is counted, and the status says so.
 
@@ -64,7 +70,8 @@ has a current, known report (out of season, every report old), the count is **no
 never 0) and the summary says "No current winter road report in the zone".
 
 **Nothing rather than 0**: an answer that is not a list (an error page), a list where more than half of the entries
-cannot be read, or a list over 10,000 entries, is never published as 0. Each of the two resources stands alone: when
+cannot be read, a list over 10,000 entries, or an empty list of events for the whole province (most likely an
+outage of the source), is never published as 0. Each of the two resources stands alone: when
 one fails, its own features keep their last value, the status says why, and the other one is still published. The
 summary says "Events not read" or "Winter road conditions not read" for the one that failed.
 
@@ -82,7 +89,8 @@ and per read: the others come with the next read (when still within 2 hours).
 ## Configuration
 
 1. **Developer key** (required).
-2. **Language**: English or French.
+2. **Language**: English or French. Changing it reads at once (7 seconds after the last call), so that the texts
+   come in the new language.
 3. **Read interval**: 10 to 120 minutes (15 by default).
 4. **Zone 1** (required), zones 2 and 3 (optional, left empty to turn them off): a name, the latitude and longitude of
    the center (decimal degrees, inside Ontario), the radius in km (20 by default), and optionally the roads to keep,
@@ -112,7 +120,8 @@ the refused one: then the status says the key is refused, and one press of the b
 Only the documented refusal counts: HTTP 400 with the message "Invalid Key". A 401, a 403, another 400, a page that
 cannot be read are never a refusal of the key: they pause the reads like a server error (below). When only the winter
 conditions are refused while the events are read with the same key, the events go on and the conditions are asked
-again later: at the next read, then every 30 minutes, then every hour at most; the reads are never paused for that.
+again later, spaced by the interval doubled each time (at the next read, then 2, 4… intervals later), every hour at
+most; the reads are never paused for that.
 
 ## Pace and courtesy toward Ontario 511
 

@@ -200,7 +200,7 @@
   {
     "name": "refusal lifted by a success",
     "file": "src/app.js",
-    "from": "if (events.ok) this.onKeyAccepted();",
+    "from": "      this.onKeyAccepted();\n",
     "to": ""
   },
   {
@@ -304,5 +304,215 @@
     "file": "src/app.js",
     "from": "    if (counts) {\n      states.push(",
     "to": "    if (counts && conditions) {\n      states.push("
+  },
+  {
+    "name": "r1: gap 6.1 s",
+    "file": "src/constants.js",
+    "from": "export const REQUEST_GAP = 7 * SECOND;",
+    "to": "export const REQUEST_GAP = 6.1 * SECOND;"
+  },
+  {
+    "name": "r1: button during pause",
+    "file": "src/app.js",
+    "from": " && this.pausedFor() === 0) {",
+    "to": ") {"
+  },
+  {
+    "name": "r1: button while running",
+    "file": "src/app.js",
+    "from": "if (this.running) return M.keyRetryBusy;",
+    "to": ""
+  },
+  {
+    "name": "r1: redirect follow",
+    "file": "src/ontario511.js",
+    "from": "redirect: 'error',",
+    "to": "redirect: 'follow',"
+  },
+  {
+    "name": "r1: lang always en",
+    "file": "src/ontario511.js",
+    "from": "lang: language === 'fr' ? 'fr' : 'en',",
+    "to": "lang: 'en',"
+  },
+  {
+    "name": "r1: late pause check in request",
+    "file": "src/app.js",
+    "from": "if (this.pausedFor() > 0) return { ok: false, kind: 'paused' };\n    this.lastRequestMono",
+    "to": "this.lastRequestMono"
+  },
+  {
+    "name": "r1: runCycle ignores refused",
+    "file": "src/app.js",
+    "from": "if (gen !== this.gen || this.refused) return;",
+    "to": "if (gen !== this.gen) return;"
+  },
+  {
+    "name": "r1: no user agent",
+    "file": "src/ontario511.js",
+    "from": "headers: { Accept: 'application/json', 'User-Agent': USER_AGENT },",
+    "to": "headers: { Accept: 'application/json' },"
+  },
+  {
+    "name": "r1: no accept",
+    "file": "src/ontario511.js",
+    "from": "headers: { Accept: 'application/json', 'User-Agent': USER_AGENT },",
+    "to": "headers: { 'User-Agent': USER_AGENT },"
+  },
+  {
+    "name": "r1: events other status no pause",
+    "file": "src/app.js",
+    "from": "const PAUSING = ['rate', 'server', 'http'];",
+    "to": "const PAUSING = ['rate', 'server'];"
+  },
+  {
+    "name": "r1: conditions http pauses",
+    "file": "src/app.js",
+    "from": "const PAUSING_SECONDARY = ['rate', 'server'];",
+    "to": "const PAUSING_SECONDARY = ['rate', 'server', 'http'];"
+  },
+  {
+    "name": "r1: winter unknown -> 0",
+    "file": "src/zone.js",
+    "from": "if (known.length === 0) return null;",
+    "to": "if (known.length === 0) return 0;"
+  },
+  {
+    "name": "r1: timer clamp removed",
+    "file": "src/app.js",
+    "from": "Number.isFinite(ms) ? Math.min(TIMER_MAX, Math.max(0, ms)) : fallback;",
+    "to": "Number.isFinite(ms) ? Math.max(0, ms) : fallback;"
+  },
+  {
+    "name": "r1: refusal substring",
+    "file": "src/ontario511.js",
+    "from": "/^\\s*invalid key\\s*\\.?\\s*$/i.test(message)",
+    "to": "/invalid key/i.test(message)"
+  },
+  {
+    "name": "r1: date sanity removed",
+    "file": "src/app.js",
+    "from": "if (Math.abs(at - local) <= DATE_SANITY) return at;",
+    "to": "return at;"
+  },
+  {
+    "name": "r1: pause max removed",
+    "file": "src/app.js",
+    "from": "duration = Math.min(PAUSE_MAX, Math.max(PAUSE_MIN, duration));",
+    "to": "duration = Math.max(PAUSE_MIN, duration);"
+  },
+  {
+    "name": "r1: retry-after ignored",
+    "file": "src/app.js",
+    "from": "Number.isFinite(result.retryAfter) && result.retryAfter > duration",
+    "to": "false"
+  },
+  {
+    "name": "r1: key in refusal log",
+    "file": "src/app.js",
+    "from": "reads stopped');",
+    "to": "reads stopped ' + this.config.key);"
+  },
+  {
+    "name": "r1: last attempt not in /data",
+    "file": "src/app.js",
+    "from": "this.persisted.lastAttemptAt = this.now();",
+    "to": ""
+  },
+  {
+    "name": "r1: refused fingerprint full",
+    "file": "src/app.js",
+    "from": "this.persisted.refusedKey = print.slice(0, 2);",
+    "to": "this.persisted.refusedKey = print;"
+  },
+  {
+    "name": "r1: conditions invalid key not skipped",
+    "file": "src/app.js",
+    "from": "else if (result.kind === 'http' || result.kind === 'key') {",
+    "to": "else if (result.kind === 'http') {"
+  },
+  {
+    "name": "r1: conditions pause check removed",
+    "file": "src/app.js",
+    "from": "if (this.pausedFor(mono) > 0) return { ok: false, kind: 'paused' };\n    if (this.secondary",
+    "to": "if (this.secondary"
+  },
+  {
+    "name": "r1: one request at a time removed",
+    "file": "src/app.js",
+    "from": "if (this.inflight) {\n        await this.inflight;\n        continue;\n      }",
+    "to": ""
+  },
+  {
+    "name": "r1: no Date: local clock w/o floor",
+    "file": "src/app.js",
+    "from": "if (local >= LOCAL_FLOOR) return local;",
+    "to": "return local;"
+  },
+  {
+    "name": "r1: 429 first pause 0",
+    "file": "src/constants.js",
+    "from": "export const PAUSE_429_FIRST = 2 * MINUTE;",
+    "to": "export const PAUSE_429_FIRST = 1;"
+  },
+  {
+    "name": "r1: config retry no cap",
+    "file": "src/app.js",
+    "from": "delay = Math.min(delay * 2, CONFIG_RETRY_MAX);",
+    "to": "delay = delay * 2;"
+  },
+  {
+    "name": "r1: round throw not re-armed",
+    "file": "src/app.js",
+    "from": "this.scheduleCycle(interval, gen);\n        });",
+    "to": "});"
+  },
+  {
+    "name": "r1: test button reads when not refused",
+    "file": "src/app.js",
+    "from": "if (this.refused && config?.key && config.zones.length > 0",
+    "to": "if (config?.key && config.zones.length > 0"
+  },
+  {
+    "name": "r1: refused persisted not loaded",
+    "file": "src/app.js",
+    "from": "else this.refused = this.persisted.refusedKey === print.slice(0, 2);",
+    "to": "else this.refused = false;"
+  },
+  {
+    "name": "B1: a newer generation never waits for an older round",
+    "file": "src/app.js",
+    "from": "if (this.running && this.runningGen === gen) return this.running;",
+    "to": "if (this.running) return this.running;"
+  },
+  {
+    "name": "B2: a pause of the conditions survives the round",
+    "file": "src/app.js",
+    "from": "if (events.ok && !PAUSING_SECONDARY.includes(layers.conditions.kind)) {",
+    "to": "if (events.ok) {"
+  },
+  {
+    "name": "B2: the pause starts with the answer",
+    "file": "src/app.js",
+    "from": "if (!answer.ok && pausing.includes(answer.kind)) this.startPause(answer);",
+    "to": ""
+  },
+  {
+    "name": "M1: empty province list is not 0",
+    "file": "src/app.js",
+    "from": "if (events.items.length === 0) {",
+    "to": "if (false) {"
+  },
+  {
+    "name": "M2: unreadable start not counted",
+    "file": "src/ontario511.js",
+    "from": "if (start === null && raw.StartDate !== null && raw.StartDate !== undefined) return null;",
+    "to": ""
+  },
+  {
+    "name": "M7: another language reads at once",
+    "file": "src/app.js",
+    "from": "fingerprints.set('language', config.language);",
+    "to": ""
   }
 ]

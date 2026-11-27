@@ -767,3 +767,221 @@ test('the key never reaches a log, the status, /data or a scene, whatever happen
     await app.stop();
   }
 });
+
+// --- Review r1 -----------------------------------------------------------------
+
+test('the gap itself keeps the quota: ceil(60 s / gap) calls at most, 9 < 10 (literal numbers)', () => {
+  assert.ok(Math.ceil(60000 / REQUEST_GAP) <= 9, `${REQUEST_GAP} ms allows 10 calls a minute`);
+  assert.equal(QUOTA_CALLS, 10);
+  assert.equal(QUOTA_WINDOW, 60000);
+});
+
+test('the quota saturated: zones moved every 3 s, then a refused key pressed every second', async () => {
+  const { begin, api, wait, app } = await setup();
+  await begin();
+  for (let i = 0; i < 30; i += 1) {
+    await app.start({ ...HOME, zone1_latitude: 43.6 + i / 1000 });
+    await wait(3 * SECOND);
+  }
+  const moved = api.calls.length;
+  assert.ok(moved >= 12, `${moved} calls in 90 s: the gap is the only limit`);
+  const most = busiestMinute(api.calls);
+  assert.ok(most >= 8 && most <= 9, `${most} calls in a minute`);
+
+  const refused = createApi((url, a) => invalidKey(a.clock.wall()));
+  const second = await setup({ api: refused });
+  await second.begin();
+  for (let i = 0; i < 90; i += 1) {
+    second.app.testConnection();
+    await second.wait(SECOND);
+  }
+  const pressed = busiestMinute(refused.calls);
+  assert.ok(pressed >= 8 && pressed <= 9, `${pressed} calls in a minute`);
+  assert.equal(refused.peak, 1);
+});
+
+test('a zone moved while the round publishes slowly: a new round starts, the cycle goes on', async () => {
+  const { begin, api, wait, app, gladys, clock } = await setup();
+  const publish = gladys.publishStates.bind(gladys);
+  gladys.publishStates = async (states) => {
+    await new Promise((resolve) => clock.timers.setTimeout(resolve, 3 * SECOND));
+    return publish(states);
+  };
+  await begin();
+  await wait(GAP + 500);
+  assert.equal(api.calls.length, 2);
+  await app.start({ ...HOME, zone1_latitude: 43.7 });
+  await wait(GAP);
+  assert.equal(api.calls.length, 3, 'a new round, 7 s after the last call');
+  await wait(GAP + 5 * SECOND);
+  assert.equal(api.calls.length, 4);
+  assert.ok(app.cycleTimer !== null, 'the next round is armed');
+  await wait(INTERVAL);
+  assert.equal(api.calls.length, 6);
+});
+
+test('a zone moved while /data is slow at the start of a round: a new round starts', async () => {
+  const store = createMemoryStore();
+  const { begin, api, wait, app, clock } = await setup({ store });
+  await begin();
+  await wait(GAP);
+  assert.equal(api.calls.length, 2);
+  // From now on, every save of /data hangs 3 s (bounded to 2 s by the app).
+  store.hold = new Promise((resolve) => clock.timers.setTimeout(resolve, 3 * SECOND));
+  await app.start({ ...HOME, zone1_latitude: 43.7 });
+  await wait(SECOND);
+  assert.equal(api.calls.length, 2, 'the round waits for /data');
+  await app.start({ ...HOME, zone1_latitude: 43.8 });
+  // The last call was at 7 s: the new round calls at 14 s (gap).
+  await wait(7 * SECOND);
+  assert.equal(api.calls.length, 3, 'a new round, not the old one waited for');
+  assert.equal(new URL(api.calls[2].url).pathname, '/api/v2/get/event');
+  await wait(GAP);
+  assert.equal(api.calls.length, 4);
+  await wait(INTERVAL);
+  assert.equal(api.calls.length, 6, 'the cycle goes on');
+});
+
+test('a 429 on the winter conditions pauses every read with its Retry-After, kept in /data', async () => {
+  let conditions = (a) =>
+    json({}, { status: 429, date: a.clock.wall(), headers: { 'retry-after': '10800' } });
+  const api = createApi((url, a) => (layerOf(url) === 'conditions' ? conditions(a) : real(url)));
+  const store = createMemoryStore();
+  const { begin, wait, fake, app } = await setup({ api, store });
+  await begin();
+  await wait(GAP);
+  assert.equal(api.calls.length, 2);
+  assert.deepEqual(published(fake, F(1, 'events')), [4], 'the events read are published');
+  assert.ok(app.pausedFor() > 2.9 * HOUR, 'paused for the Retry-After');
+  assert.equal(store.data.pause.kind, 'rate');
+  assert.ok(store.data.pause.until >= CAPTURED_AT + 3 * HOUR);
+  assert.match(
+    status(fake).message.en,
+    /asked to slow down \(429\): reads paused until Nov 27, 13:00 ET/,
+  );
+  await app.stop();
+  // A restart during the pause: still paused, then a 503 on the conditions doubles its own level.
+  conditions = (a) => json({}, { status: 503, date: a.clock.wall() });
+  const second = await setup({ api, store, start: api.clock.wall() });
+  await second.begin();
+  await second.wait(3 * HOUR - MINUTE);
+  assert.equal(api.calls.length, 2);
+  await second.wait(MINUTE + GAP);
+  assert.equal(api.calls.length, 4);
+  assert.equal(store.data.pause.level5xx, 1);
+  assert.equal(store.data.pause.kind, 'server');
+  await second.wait(INTERVAL + GAP);
+  assert.equal(api.calls.length, 6);
+  assert.equal(store.data.pause.level5xx, 2, 'doubled, not erased by the events read');
+});
+
+test('an empty list of events for the whole province is not "no event": nothing published', async () => {
+  const api = createApi((url) => (layerOf(url) === 'events' ? [] : real(url)));
+  const { begin, wait, fake, store } = await setup({ api });
+  await begin();
+  await wait(GAP);
+  assert.deepEqual(published(fake, F(1, 'events')), []);
+  assert.deepEqual(published(fake, F(1, 'closures')), []);
+  assert.deepEqual(published(fake, F(1, 'winter_segments')), [1]);
+  assert.match(published(fake, F(1, 'summary'))[0], /^Events not read · /);
+  assert.match(
+    status(fake).message.en,
+    /events: Ontario 511 sends an empty list of events for the whole province/,
+  );
+  assert.equal(store.data.pause, undefined, 'no pause');
+});
+
+test('a pause asked by a late answer of an older round holds the request of the new one', async () => {
+  const api = createApi(async (url, a) => {
+    await new Promise((resolve) => a.clock.timers.setTimeout(resolve, 10 * SECOND));
+    return json({}, { status: 429, date: a.clock.wall() });
+  });
+  const { begin, wait, app } = await setup({ api });
+  await begin();
+  await wait(SECOND);
+  await app.start({ ...HOME, zone1_latitude: 43.7 });
+  await wait(30 * SECOND);
+  assert.equal(api.calls.length, 1, 'the new round sends nothing during the pause');
+  assert.ok(app.pausedFor() > 0);
+});
+
+test('one request at a time: a slow answer holds the next one past the gap', async () => {
+  const api = createApi(async (url, a) => {
+    if (layerOf(url) === 'events') {
+      await new Promise((resolve) => a.clock.timers.setTimeout(resolve, 20 * SECOND));
+    }
+    return real(url);
+  });
+  const { begin, wait } = await setup({ api });
+  await begin();
+  await wait(30 * SECOND);
+  assert.equal(api.calls.length, 2);
+  assert.ok(api.calls[1].at >= 20 * SECOND, `${api.calls[1].at}`);
+  assert.equal(api.peak, 1);
+});
+
+test('no Date and a local clock lost (before November 2026): nothing counted', async () => {
+  const api = createApi((url) => json(real(url), { date: null }));
+  const { begin, wait, fake } = await setup({ api, start: Date.UTC(2026, 9, 1) });
+  await begin();
+  await wait(GAP);
+  assert.equal(fake.states.length, 0);
+  assert.match(status(fake).message.en, /no believable time/i);
+});
+
+test('getConfig() failing for long: the retry is spaced up to 5 min, never more', async () => {
+  const { app, gladys, fake, wait } = await setup();
+  gladys.getConfig = async () => {
+    throw new Error('down');
+  };
+  app.connected();
+  const seen = new Set();
+  for (let i = 0; i < 40; i += 1) {
+    await wait(MINUTE);
+    seen.add(status(fake).message.en.match(/next try in (\d+) s/)[1]);
+  }
+  assert.ok(seen.has('300'));
+  for (const seconds of seen) assert.ok(Number(seconds) <= 300, seconds);
+  await app.disconnected();
+});
+
+test('timerDelay: finite, 0 to 8 h, the fallback for anything else', async () => {
+  const { timerDelay } = await import('../src/app.js');
+  assert.equal(timerDelay(-5, 1), 0);
+  assert.equal(timerDelay(1000, 1), 1000);
+  assert.equal(timerDelay(100 * HOUR, 1), PAUSE_MAX + REFRESH_MAX * MINUTE);
+  assert.equal(timerDelay(Infinity, 7), 7);
+  assert.equal(timerDelay(NaN, 7), 7);
+});
+
+test('another language reads at once, and the texts are asked in it', async () => {
+  const { begin, api, wait, app, fake } = await setup();
+  await begin();
+  await wait(MINUTE);
+  await app.start({ ...HOME, language: 'fr' });
+  await wait(GAP);
+  assert.equal(api.calls.length, 4, 'read at once');
+  assert.equal(new URL(api.calls[2].url).searchParams.get('lang'), 'fr');
+  assert.match(published(fake, F(1, 'summary')).at(-1), /^4 événements/);
+});
+
+test('a 403 of the winter conditions alone never pauses the events', async () => {
+  const api = createApi((url, a) =>
+    layerOf(url) === 'conditions'
+      ? json({ Message: 'Forbidden' }, { status: 403, date: a.clock.wall() })
+      : real(url),
+  );
+  const { begin, wait, fake, store, app } = await setup({ api });
+  await begin();
+  await wait(GAP);
+  assert.equal(app.pausedFor(), 0);
+  assert.equal(store.data.pause, undefined);
+  await wait(2 * INTERVAL);
+  assert.equal(
+    api.calls.filter((c) => layerOf(c.url) === 'events').length,
+    3,
+    'events every round',
+  );
+  assert.deepEqual(published(fake, F(1, 'events')), [4, 4, 4]);
+  assert.match(status(fake).message.en, /winter conditions: /);
+});

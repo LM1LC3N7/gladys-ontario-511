@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Ontario 511",
+  "name": "Ontario 511 (unofficial)",
   "description": {
     "en": "Unofficial. Road events and winter conditions in Ontario from Ontario 511.",
     "fr": "Non officiel. Événements routiers et état des routes en hiver en Ontario (Ontario 511)."
@@ -22,8 +22,8 @@
         "fr": "Événements routiers Ontario 511"
       },
       "description": {
-        "en": "Incidents, roadwork, closures and winter road conditions published by Ontario 511 (Ministry of Transportation of Ontario), read with a free developer key (10 calls per minute; this integration makes 2 per read). Up to three zones, each one a device. Data under the Open Government Licence – Ontario. Check 511on.ca before you drive: this integration is not an official source.",
-        "fr": "Incidents, travaux, fermetures et état des routes en hiver publiés par Ontario 511 (ministère des Transports de l'Ontario), lus avec une clé de développeur gratuite (10 appels par minute ; cette intégration en fait 2 par lecture). Jusqu'à trois zones, un appareil chacune. Données sous la Licence du gouvernement ouvert – Ontario. Vérifiez 511on.ca avant de prendre la route : cette intégration n'est pas une source officielle."
+        "en": "Incidents, roadwork, closures and winter road conditions published by Ontario 511 (Ministry of Transportation of Ontario), read with a free developer key (10 calls per minute; this integration makes 2 per read). Up to three zones, each one a device. Contains information licensed under the Open Government Licence – Ontario. Source: Ontario 511 (511on.ca). Check 511on.ca before you drive: this integration is not an official source.",
+        "fr": "Incidents, travaux, fermetures et état des routes en hiver publiés par Ontario 511 (ministère des Transports de l'Ontario), lus avec une clé de développeur gratuite (10 appels par minute ; cette intégration en fait 2 par lecture). Jusqu'à trois zones, un appareil chacune. Contient de l'information utilisée sous la Licence du gouvernement ouvert – Ontario. Source : Ontario 511 (511on.ca). Vérifiez 511on.ca avant de prendre la route : cette intégration n'est pas une source officielle."
       },
       "links": [
         {
@@ -38,6 +38,13 @@
           "label": {
             "en": "Ontario 511 developer API (key request)",
             "fr": "API développeurs d'Ontario 511 (demande de clé)"
+          }
+        },
+        {
+          "url": "https://511on.ca/developers/resources",
+          "label": {
+            "en": "Developer's Access Agreement",
+            "fr": "Entente d'accès pour les développeurs"
           }
         },
         {

@@ -97,7 +97,7 @@ const NO_PAUSE = () => ({
 });
 
 /** A delay a timer can take: finite, 0 to TIMER_MAX; `fallback` otherwise. */
-const timerDelay = (ms, fallback) =>
+export const timerDelay = (ms, fallback) =>
   Number.isFinite(ms) ? Math.min(TIMER_MAX, Math.max(0, ms)) : fallback;
 
 export class Ontario511App {
@@ -132,8 +132,9 @@ export class Ontario511App {
     this.sleeps = new Set();
     this.pendingStart = undefined;
     this.starting = null;
-    /** The round in progress (a promise), if any. */
+    /** The round in progress (a promise), if any, and its generation. */
     this.running = null;
+    this.runningGen = null;
 
     this.lastRequestMono = -Infinity;
     this.inflight = null;
@@ -322,8 +323,9 @@ export class Ontario511App {
       await this.updateStatus(gen);
       return;
     }
-    // A moved zone or a new key reads at once (nothing read yet for it).
+    // A moved zone, a new key or another language reads at once (nothing read yet for it).
     fingerprints.set('key', print);
+    fingerprints.set('language', config.language);
     const changed =
       this.lastFingerprints !== null &&
       JSON.stringify([...fingerprints]) !== JSON.stringify([...this.lastFingerprints]);
@@ -620,13 +622,19 @@ export class Ontario511App {
     await this.startRound(gen);
   }
 
-  /** Runs one round, never two at once. */
+  /**
+   * Runs one round, never two of the same generation at once. A round of an
+   * older generation (configuration saved, reconnection while it published)
+   * is never waited for: it sends nothing more (each request checks its
+   * generation) and the new one starts, paced by the gap like any request.
+   */
   startRound(gen) {
-    if (this.running) return this.running;
+    if (this.running && this.runningGen === gen) return this.running;
     const job = this.round(gen).finally(() => {
       if (this.running === job) this.running = null;
     });
     this.running = job;
+    this.runningGen = gen;
     return job;
   }
 
@@ -642,25 +650,38 @@ export class Ontario511App {
     this.saveFailed = !saved && this.storeStatus !== 'unreadable';
     if (gen !== this.gen) return;
     const layers = {};
-    const events = await this.readLayer(LAYERS.EVENTS, readEvent, gen);
-    if (gen !== this.gen && !(PAUSING.includes(events.kind) || events.kind === 'key')) return;
+    const events = await this.readLayer(LAYERS.EVENTS, readEvent, gen, PAUSING);
+    if (gen !== this.gen) {
+      // A pause asked meanwhile (set by the request itself) is kept in /data.
+      if (PAUSING.includes(events.kind)) await this.persist();
+      return;
+    }
     if (events.kind === 'key') {
       await this.onKeyRefused(gen);
       return;
     }
-    if (!events.ok && PAUSING.includes(events.kind)) {
-      // A refusal of the source pauses the reads even when the configuration
-      // changed or Gladys reconnected while the request was out.
-      this.startPause(events);
-      if (gen !== this.gen) {
-        await this.persist();
-        return;
+    if (events.ok) {
+      this.onKeyAccepted();
+      // A request never leaves during a pause: none runs, the pause ends.
+      this.pauseUntilMono = null;
+      if (this.persisted.pause) this.persisted.pause.until = null;
+      // A list empty for the whole province is an outage of the source, not "no event".
+      if (events.items.length === 0) {
+        events.ok = false;
+        events.kind = 'empty';
       }
     }
-    if (events.ok) this.onKeyAccepted();
     layers.events = events;
     layers.conditions = await this.readConditions(gen);
-    if (gen !== this.gen) return;
+    // Both read without a pause asked: the doubling starts over. A pause the
+    // conditions asked for stays, with its level.
+    if (events.ok && !PAUSING_SECONDARY.includes(layers.conditions.kind)) {
+      if (this.persisted.pause) this.persisted.pause = NO_PAUSE();
+    }
+    if (gen !== this.gen) {
+      if (PAUSING_SECONDARY.includes(layers.conditions.kind)) await this.persist();
+      return;
+    }
     const at =
       events.ok || layers.conditions.ok
         ? this.referenceTime(events.at ?? layers.conditions.at)
@@ -668,9 +689,6 @@ export class Ontario511App {
     for (const key of ['events', 'conditions']) {
       const result = layers[key];
       if (result.ok) {
-        // A success lifts the pauses.
-        this.pauseUntilMono = null;
-        if (this.persisted.pause) this.persisted.pause = NO_PAUSE();
         // Without a time to judge on, nothing is counted (never all, never 0).
         if (at === null) layers[key] = { ok: false, kind: 'no_time' };
         else result.at = at;
@@ -710,11 +728,9 @@ export class Ontario511App {
     if (this.secondary.untilMono !== null && this.secondary.untilMono > mono) {
       return { ok: false, kind: 'skipped' };
     }
-    const result = await this.readLayer(LAYERS.CONDITIONS, readCondition, gen);
+    const result = await this.readLayer(LAYERS.CONDITIONS, readCondition, gen, PAUSING_SECONDARY);
     if (result.ok) {
       this.secondary = { level: 0, untilMono: null };
-    } else if (PAUSING_SECONDARY.includes(result.kind)) {
-      this.startPause(result);
     } else if (result.kind === 'http' || result.kind === 'key') {
       const level = Math.min(this.secondary.level + 1, 30);
       const interval = this.config.refreshMinutes * MINUTE;
@@ -776,7 +792,7 @@ export class Ontario511App {
    * One request, when its turn comes: after the one in flight, 7 s after
    * the start of the previous one. `null` when stopped meanwhile.
    */
-  async request(url, gen) {
+  async request(url, gen, pausing = []) {
     for (;;) {
       if (gen !== this.gen) return null;
       if (this.inflight) {
@@ -805,16 +821,20 @@ export class Ontario511App {
       () => {},
     );
     try {
-      return await job;
+      const answer = await job;
+      // The pause starts with the answer, before any other request can leave
+      // (a late answer of an older round holds the requests of the new one).
+      if (!answer.ok && pausing.includes(answer.kind)) this.startPause(answer);
+      return answer;
     } finally {
       this.inflight = null;
     }
   }
 
   /** One resource for the whole province: `{ ok, items, at, skipped }` or a failure. */
-  async readLayer(path, readItem, gen) {
+  async readLayer(path, readItem, gen, pausing) {
     const url = resourceUrl(path, this.config.key, this.config.language, this.apiBase);
-    const answer = await this.request(url, gen);
+    const answer = await this.request(url, gen, pausing);
     if (answer === null) return { ok: false, kind: 'stopped' };
     if (!answer.ok) return answer;
     const read = readList(answer.json, readItem);
