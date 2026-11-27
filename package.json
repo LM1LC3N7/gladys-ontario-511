@@ -1,6 +1,6 @@
 {
   "name": "gladys-ontario-511",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Unofficial Ontario 511 integration for Gladys Assistant: road events (incidents, roadwork, closures) and winter road conditions in Ontario from the Ontario 511 developer API.",
   "type": "module",

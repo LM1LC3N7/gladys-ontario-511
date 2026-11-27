@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-27
+
 ### Added
 
 - Up to three watch zones in Ontario, each one a Gladys device: events in effect, incidents, roadwork, closures,
@@ -26,3 +28,6 @@ the notes of the version's GitHub Release.
   unknown winter count (no current report) is not published.
 - The statement of the Open Government Licence – Ontario in the documentation and the configuration screen.
 - Store: `countries: ["CA"]` (the integration serves Ontario only), so `gladys_version` is `>=5.3.0`.
+
+[Unreleased]: https://github.com/LM1LC3N7/gladys-ontario-511/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/LM1LC3N7/gladys-ontario-511/releases/tag/v0.1.1
